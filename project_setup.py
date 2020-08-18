@@ -1,13 +1,13 @@
 #!./venv/bin/python3
 import os
 import shutil
-# import subprocess
 import datetime
 import argparse
 import sys
 
 # * ==============================================================================
 
+# Program variables
 directory_list = [".vscode", "scripts",
                   "configs", "docs", "archive", "temp"]
 command_list = []
@@ -51,6 +51,7 @@ if __name__ == "__main__":
     log("Script starting...")
 
     # * ==========================================================================
+
     # Create parser
     parser = argparse.ArgumentParser(
         prog='simple_project_setup',
@@ -117,7 +118,7 @@ if __name__ == "__main__":
             command_list.append(
                 "gnome-terminal -- sudo ./venv/bin/python3 ./app.py")
     if args.react:
-        print(args.react)
+        print('React')
         command_list.append(f"npx create-react-app {args.react}")
         if args.windows:
             command_list.append(
