@@ -14,7 +14,7 @@ command_list = []
 venv_path = 'venv/bin'
 gitignore_text = ''
 requirements_txt_text = ''
-file_list = [(".vscode/settings.json", '')]
+file_list = [(".vscode/settings.json", '{\n    \n}')]
 
 # * ==============================================================================
 
@@ -63,23 +63,30 @@ if __name__ == "__main__":
                         action='store_true',
                         help='Creates basic python files and folder structure'
                         )
-    parser.add_argument('-a',
+    parser.add_argument('-pA',
                         '--api',
                         action='store_true',
                         help='Creates python api files and folder structure'
                         )
-    parser.add_argument('-v',
+    parser.add_argument('-pV',
                         '--venv',
                         action='store_true',
                         help='Creates a python venv'
                         )
     parser.add_argument('-r',
                         '--react',
+                        action='store',
+                        help='Creates a React environment with name as input'
+                        )
+    parser.add_argument('-w',
+                        '--windows',
                         action='store_true',
-                        help='Creates a React environment'
+                        help='Will open terminal windows and vscode where applicable'
                         )
     # Parse arguments
     args = parser.parse_args()
+
+    print(vars(args))
 
     # * ==============================================================================
 
@@ -106,10 +113,15 @@ if __name__ == "__main__":
         file_list.append(('./templates/index.html', '<!DOCTYPE html>\n<html lang="en">\n    <head>\n        <title>App</title>\n        <link rel="stylesheet" href="static/main.css">\n        <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon">\n    </head>\n    <body>\n        <h1 style="text-align: center;">Welcome to my app!</h1>\n    </body>\n</html>\n'))
         file_list.append(
             ('./static/main.css', "* {\n    margin: 0;\n}\n"))
-        # command_list.append(
-        #     "gnome-terminal -- sudo ./venv/bin/python3 ./app.py")
+        if args.windows:
+            command_list.append(
+                "gnome-terminal -- sudo ./venv/bin/python3 ./app.py")
     if args.react:
-        raise NotImplementedError
+        print(args.react)
+        command_list.append(f"npx create-react-app {args.react}")
+        if args.windows:
+            command_list.append(
+                f'gnome-terminal -- /bin/bash -c "cd ./{args.react} && npm start"')
 
     # * ==========================================================================
 
@@ -120,16 +132,21 @@ if __name__ == "__main__":
     log('Creating files')
     for _file in file_list:
         create_file(_file[0], _file[1])
-    log('Creating ./requirements.txt')
-    with open('./requirements.txt', 'a') as f:
-        f.write(requirements_txt_text)
-    log('Creating ./.gitignore')
-    with open('./.gitignore', 'a') as f:
-        f.write(gitignore_text)
+    if requirements_txt_text is not '':
+        log('Creating ./requirements.txt')
+        with open('./requirements.txt', 'a') as f:
+            f.write(requirements_txt_text)
+    if gitignore_text is not '':
+        log('Creating ./.gitignore')
+        with open('./.gitignore', 'a') as f:
+            f.write(gitignore_text)
     log('Executing commands')
     for _cmd in command_list:
         execute_command(_cmd)
 
     # * ======================================================================
+
+    if args.windows:
+        os.system('code -n .')
 
     log("...Script completed")
