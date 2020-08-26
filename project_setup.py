@@ -16,6 +16,7 @@ venv_path = 'venv/bin'
 gitignore_text = ''
 requirements_txt_text = ''
 file_list = []
+docker_compose_text = ''
 
 # * ==============================================================================
 
@@ -27,7 +28,13 @@ else:
                         format='%(levelname)s: %(asctime)s: %(message)s', datefmt="%H:%M:%S (UTC %z)")
 
 
-def create_folder(_folder_name, _args_script_debug=False):
+def create_folder(_folder_name: str, _args_script_debug=False):
+    """Create a folder
+
+    Args:
+        _folder_name (str): Name of folder to create
+        _args_script_debug (bool, optional): A paramater for the -sD option. Defaults to False.
+    """
     logging.debug(f'Creating folder ({_folder_name})')
     # If the -sD option was not set, create folder without showing output or errors
     if not _args_script_debug:
@@ -37,13 +44,25 @@ def create_folder(_folder_name, _args_script_debug=False):
         subprocess.run(f"mkdir {_folder_name}", shell=True)
 
 
-def create_file(_file_name, _file_content):
+def create_file(_file_name: str, _file_content: str):
+    """Create a file
+
+    Args:
+        _file_name (str): Name of file to create
+        _file_content (str): What to put in the file
+    """
     logging.debug(f'Creating file ({_file_name})')
     with open(_file_name, 'w') as f:
         f.write(_file_content)
 
 
-def execute_command(_cmd, _args_script_debug=False):
+def execute_command(_cmd: str, _args_script_debug=False):
+    """Execute a bash command
+
+    Args:
+        _cmd (str): The command to execute
+        _args_script_debug (bool, optional): A parameter for the -sD option. Defaults to False.
+    """
     logging.debug(f'Running command ({_cmd})')
     # If the -sD option was not set, execute command without showing output or errors
     if not _args_script_debug:
@@ -67,6 +86,7 @@ if __name__ == "__main__":
         allow_abbrev=False
     )
     # Optional arguments
+    # TODO Add Docker options
     parser.add_argument('-p',
                         '--python',
                         action='store_true',
@@ -101,6 +121,16 @@ if __name__ == "__main__":
                         '--basic',
                         action='store_true',
                         help='Creates basic folder and file structure'
+                        )
+    parser.add_argument('-d',
+                        '--docker',
+                        action='store_true',
+                        help='Will create a docker-compose.yml file. This option is needed for any docker environments'
+                        )
+    parser.add_argument('-dP',
+                        '--docker_postgres',
+                        action='store_true',
+                        help='Adds Postgres configs to docker-compose.yml'
                         )
     # Parse arguments
     args = parser.parse_args()
@@ -175,6 +205,17 @@ if __name__ == "__main__":
         print('script_windows')
     if args.script_debug:
         print('script_debug')
+    if args.docker:
+        print('docker')
+        docker_compose_text += 'version: \'3.3\'\nservices:\n  postgres:'
+        if args.docker_postgres:
+            print('    docker_postgres')
+            docker_compose_text += '\n    image: "postgres"\n    ports:\n      - 5432:5432\n    restart: always\n    environment: \n      POSTGRES_USER: "admin"\n      POSTGRES_PASSWORD: "admin"\n      POSTGRES_DB: admin\n    volumes: \n      - ./data/postgres:/var/lib/postgresql/data\n'
+        if args.script_windows and args.script_debug:
+            # if -sW and -sD was set, open a text editor to edit the docker-compose.yml before starting it
+            command_list.append("nano ./docker-compose.yml")
+            command_list.append(
+                "gnome-terminal -- /bin/bash -c \"docker-compose up\"")
 
     print('')
 
@@ -198,6 +239,10 @@ if __name__ == "__main__":
         logging.info('Creating ./.gitignore')
         with open('./.gitignore', 'a') as f:
             f.write(gitignore_text)
+    if docker_compose_text is not '':
+        logging.info('Creating ./docker-compose.yml')
+        with open('./docker-compose.yml', 'a') as f:
+            f.write(docker_compose_text)
     if command_list:
         logging.info('Executing commands')
         for _cmd in command_list:
@@ -206,6 +251,11 @@ if __name__ == "__main__":
     # * ======================================================================
 
     if args.script_windows:
+        if args.script_debug:
+            subprocess.run('git add ./* .vscode .gitignore')
+            subprocess.run(
+                'git commit -m "Initial project setup\n- (This was run by project_setup.py)"')
+            subprocess.run('git push')
         subprocess.run('code -n .', shell=True)
 
     logging.info("...Script completed")
