@@ -174,6 +174,8 @@ if __name__ == "__main__":
         # If theres an existing venv, remove it
         if os.path.exists('venv'):
             command_list.append("rm -rf venv")
+        # Make sure virtualenv is installed
+        command_list.append("pip3 install virtualenv")
         # Create venv
         command_list.append("virtualenv -p python3 venv")
         # Install items from requirements.txt into the venv
